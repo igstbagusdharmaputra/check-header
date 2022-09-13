@@ -5,7 +5,7 @@ local rockspec_revision = "1"
 
 local github_account_name = "igstbagusdharmaputra"
 local github_repo_name = "check-header"
-local git_checkout = main
+local git_checkout = "main"
 
 
 package = package_name

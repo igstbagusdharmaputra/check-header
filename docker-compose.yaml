@@ -43,6 +43,7 @@ services:
       dockerfile: "Dockerfile"
     image: kong-custom:latest
     restart: on-failure
+    container_name: kong-custom
     networks:
       - kong-net
     environment:

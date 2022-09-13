@@ -4,12 +4,14 @@ COPY kong.conf /etc/kong/
 
 USER root
 
-COPY ./kong/plugins/check-header /custom-plugins/check-header
+COPY ./plugins/check-header /custom-plugins/check-header
 
 WORKDIR /custom-plugins/check-header
 
-RUN luarocks make
+COPY kong-plugin-check-header-0.1.0-1.rockspec .
 
-USER kong
+# RUN luarocks make
+
+# USER kong
 
 
