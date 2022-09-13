@@ -11,7 +11,7 @@ http_methods = Schema.define {
 }
 
 return {
-    name = "headers-validation",
+    name = "check-header",
     fields = {{
         config = {
             type = "record",

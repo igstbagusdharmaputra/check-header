@@ -47,7 +47,7 @@ local function validate_headers(conf)
 end
 
 function HeadersValidationHandler:new()
-    HeadersValidationHandler.super.new(self, "headers-validation")
+    HeadersValidationHandler.super.new(self, "check-header")
 end
 
 function HeadersValidationHandler:access(conf)
