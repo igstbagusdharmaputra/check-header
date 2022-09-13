@@ -1,95 +1,69 @@
--- If you're not sure your plugin is executing, uncomment the line below and restart Kong
--- then it will throw an error which indicates the plugin is being loaded at least.
 
---assert(ngx.get_phase() == "timer", "The world is coming to an end!")
-
----------------------------------------------------------------------------------------------
--- In the code below, just remove the opening brackets; `[[` to enable a specific handler
---
--- The handlers are based on the OpenResty handlers, see the OpenResty docs for details
--- on when exactly they are invoked and what limitations each handler has.
----------------------------------------------------------------------------------------------
-
-
+local type = type
+local error = error
+local insert = table.insert
+local tostring = tostring
+local setmetatable = setmetatable
+local getmetatable = getmetatable
 
 local plugin = {
     PRIORITY = 1000, -- set the plugin priority, which determines plugin execution order
     VERSION = "0.1", -- version in X.Y.Z format. Check hybrid-mode compatibility requirements.
+}
+  
+local function array_missing_value(tab, val)
+  for index, value in ipairs(tab) do
+      if value == val then
+          return false
+      end
+  end
+  return true
+end
+
+local function create_error(errors, header_name, error_message, error_code)
+  return {
+      header_name = header_name,
+      error_message = error_message,
+      error_code = error_code
   }
-  
-  
-  
-  -- do initialization here, any module level code runs in the 'init_by_lua_block',
-  -- before worker processes are forked. So anything you add here will run once,
-  -- but be available in all workers.
-  
-  
-  
-  -- handles more initialization, but AFTER the worker process has been forked/created.
-  -- It runs in the 'init_worker_by_lua_block'
-  function plugin:init_worker()
-  
-    -- your custom code here
-    kong.log.debug("saying hi from the 'init_worker' handler")
-  
-  end --]]
-  
-  
-  
-  --[[ runs in the 'ssl_certificate_by_lua_block'
-  -- IMPORTANT: during the `certificate` phase neither `route`, `service`, nor `consumer`
-  -- will have been identified, hence this handler will only be executed if the plugin is
-  -- configured as a global plugin!
-  function plugin:certificate(plugin_conf)
-    -- your custom code here
-    kong.log.debug("saying hi from the 'certificate' handler")
-  end --]]
-  
-  
-  
-  --[[ runs in the 'rewrite_by_lua_block'
-  -- IMPORTANT: during the `rewrite` phase neither `route`, `service`, nor `consumer`
-  -- will have been identified, hence this handler will only be executed if the plugin is
-  -- configured as a global plugin!
-  function plugin:rewrite(plugin_conf)
-    -- your custom code here
-    kong.log.debug("saying hi from the 'rewrite' handler")
-  end --]]
-  
-  
-  
-  -- runs in the 'access_by_lua_block'
-  function plugin:access(plugin_conf)
-  
-    -- your custom code here
-    kong.log.inspect(plugin_conf)   -- check the logs for a pretty-printed config!
-    kong.service.request.set_header(plugin_conf.request_header, "this is on a request")
-  
-  end --]]
-  
-  
-  -- runs in the 'header_filter_by_lua_block'
-  function plugin:header_filter(plugin_conf)
-  
-    -- your custom code here, for example;
-    kong.response.set_header(plugin_conf.response_header, "this is on the response")
-  
-  end --]]
-  
-  
-  --[[ runs in the 'body_filter_by_lua_block'
-  function plugin:body_filter(plugin_conf)
-    -- your custom code here
-    kong.log.debug("saying hi from the 'body_filter' handler")
-  end --]]
-  
-  
-  --[[ runs in the 'log_by_lua_block'
-  function plugin:log(plugin_conf)
-    -- your custom code here
-    kong.log.debug("saying hi from the 'log' handler")
-  end --]]
-  
-  
-  -- return our plugin object
-  return plugin
+end
+
+local function validate_headers(conf)
+  local error = nil
+  for header_name, header_config in pairs(conf.headers) do
+      if header_config.http_methods[kong.request.get_method()] then
+          local header_value = kong.request.get_header(header_name)
+          if header_value == nil and header_config.required then
+              error = create_error(header_name, header_config.missing_header_response_text,
+                  header_config.missing_header_response_code)
+          else
+              if array_missing_value(header_config.values, header_value) then
+                  error = create_error(header_name, header_config.invalid_header_response_text,
+                      header_config.invalid_header_response_code)
+              end
+          end
+      end
+  end
+  return error
+end
+
+function HeadersValidationHandler:new()
+  HeadersValidationHandler.super.new(self, "headers-validation")
+end
+
+function HeadersValidationHandler:access(conf)
+  HeadersValidationHandler.super.access(self)
+
+  if kong.request.get_method() == "OPTIONS" then
+      return
+  end
+
+  local error = validate_headers(conf)
+  if not error == nil then
+      return kong.response.exit(error.code, {
+          message = error.message
+      })
+  end
+end
+
+return HeadersValidationHandler

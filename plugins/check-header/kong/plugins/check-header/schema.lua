@@ -1,42 +1,89 @@
 local typedefs = require "kong.db.schema.typedefs"
 
 
-local PLUGIN_NAME = "check-header"
-
-
-local schema = {
-  name = PLUGIN_NAME,
-  fields = {
-    -- the 'fields' array is the top-level entry with fields defined by Kong
-    { consumer = typedefs.no_consumer },  -- this plugin cannot be configured on a consumer (typical for auth plugins)
-    { protocols = typedefs.protocols_http },
-    { config = {
-        -- The 'config' record is the custom part of the plugin schema
-        type = "record",
-        fields = {
-          -- a standard defined field (typedef), with some customizations
-          { request_header = typedefs.header_name {
-              required = true,
-              default = "Hello-World" } },
-          { response_header = typedefs.header_name {
-              required = true,
-              default = "Bye-World" } },
-          { ttl = { -- self defined field
-              type = "integer",
-              default = 600,
-              required = true,
-              gt = 0, }}, -- adding a constraint for the value
-        },
-        entity_checks = {
-          -- add some validation rules across fields
-          -- the following is silly because it is always true, since they are both required
-          { at_least_one_of = { "request_header", "response_header" }, },
-          -- We specify that both header-names cannot be the same
-          { distinct = { "request_header", "response_header"} },
-        },
-      },
-    },
-  },
+http_method = Schema.define {
+  type = "string",
+  match = "^(GET|HEAD|POST|PUT|DELETE|CONNECT|OPTIONS|TRACE|PATCH)$"
 }
 
-return schema
+http_methods = Schema.define {
+  type = "set",
+  elements = http_method
+}
+
+return {
+  name = "headers-validation",
+  fields = {{
+      config = {
+          type = "record",
+          fields = {{
+              consumer = typedefs.no_consumer
+          }, -- this plugin cannot be configured on a consumer (typical for auth plugins)
+          {
+              rules = {
+                  type = "map",
+                  keys = {
+                      type = "string",
+                      match_none = {{
+                          pattern = "^$",
+                          err = "Rule name cannot be empty"
+                      }}
+                  },
+                  values = {
+                      type = "record",
+                      fields = {{
+                          http_methods = {
+                              type = "set",
+                              required = true,
+                              default = "*",
+                              elements = {
+                                  type = "string",
+                                  one_of = http_methods
+                              }
+                          }
+                      }, {
+                          invalid_header_response_code = {
+                              type = "integer",
+                              between = {100, 600},
+                              default = 400
+                          }
+                      }, {
+                          invalid_header_response_text = {
+                              type = "string",
+                              default = ""
+                          }
+                      }, {
+                          missing_header_response_code = {
+                              type = "integer",
+                              between = {100, 600},
+                              default = 400
+                          }
+                      }, {
+                          missing_header_response_text = {
+                              type = "string",
+                              default = ""
+                          }
+                      }, {
+                          required = {
+                              type = "boolean",
+                              default = false
+                          }
+                      }, {
+                          values = {
+                              type = "array",
+                              match_none = {{
+                                  pattern = "^$",
+                                  err = "Header expected values cannot be empty"
+                              }},
+                              elements = {
+                                  type = "string",
+                                  required = true
+                              }
+                          }
+                      }}
+                  }
+              }
+          }}
+      }
+  }}
+}
