@@ -1,8 +1,8 @@
 
-package = "pepkong"
+package = "check-header"
 version = "0.0-2"
 
-local pluginName = "pepkong"
+local pluginName = "check-header"
 
 source = {
   url = "https://github.com/igstbagusdharmaputra/check-header.git"
