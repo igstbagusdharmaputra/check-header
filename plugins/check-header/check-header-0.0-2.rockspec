@@ -11,15 +11,18 @@ description = {
   summary = "A Kong plugin, that extract roles from a JWT token and make a request for a Policy Decision Point (PDP)",
   license = "GPL"
 }
-supported_platforms = {
-   "linux",
-   "macosx"
+dependencies = {
+  "lua ~> 5.1",
+  "json4lua ~> 0.9.30-1"
 }
-dependencies = {}
 build = {
-   type = "builtin",
-   modules = {
-      ["kong.plugins.check-header.schema"] = "kong/plugins/"..pluginName.."/handler.lua",
-      ["kong.plugins.check-header.handler"] = "kong/plugins/"..pluginName.."/schema.lua" 
-   }
+  type = "builtin",
+  modules = {
+    ["kong.plugins."..pluginName..".pepmain"] = "kong/plugins/"..pluginName.."/pepmain.lua",
+    ["kong.plugins."..pluginName..".handler"] = "kong/plugins/"..pluginName.."/handler.lua",
+    ["kong.plugins."..pluginName..".schema"] = "kong/plugins/"..pluginName.."/schema.lua",
+    ["kong.plugins."..pluginName..".utils"] = "kong/plugins/"..pluginName.."/utils.lua",
+    ["kong.plugins."..pluginName..".pdpsender"] = "kong/plugins/"..pluginName.."/pdpsender.lua",
+    ["kong.plugins."..pluginName..".pdputils"] = "kong/plugins/"..pluginName.."/pdputils.lua"
+  }
 }
