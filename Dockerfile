@@ -4,7 +4,7 @@ COPY kong.conf /etc/kong/
 
 USER root
 
-COPY ./plugins/check-header /custom-plugins/check-header
+COPY ./kong/plugins/check-header /custom-plugins/check-header
 
 WORKDIR /custom-plugins/check-header
 
