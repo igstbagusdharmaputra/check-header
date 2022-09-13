@@ -4,9 +4,9 @@ COPY kong.conf /etc/kong/
 
 USER root
 
-COPY ./plugins/pepkong /custom-plugins/pepkong
+COPY ./plugins/check-header /custom-plugins/check-header
 
-WORKDIR /custom-plugins/pepkong
+WORKDIR /custom-plugins/check-header
 
 RUN luarocks make
 
