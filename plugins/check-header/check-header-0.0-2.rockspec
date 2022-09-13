@@ -19,7 +19,7 @@ dependencies = {}
 build = {
    type = "builtin",
    modules = {
-      ["kong.plugins.check-header.handler"] = "plugins/check-header/kong/plugins/check-header/handler.lua",
-      ["kong.plugins.check-header.schema"] = "plugins/check-header/kong/plugins/check-header/schema.lua"
+      ["kong.plugins.check-header.handler"] = "kong/plugins/"..pluginName.."/schema.lua",
+      ["kong.plugins.check-header.schema"] = "kong/plugins/"..pluginName.."/handler.lua"
    }
 }

@@ -41,6 +41,7 @@ services:
     build:
       context: .
       dockerfile: "Dockerfile"
+    image: kong-custom:latest
     restart: on-failure
     networks:
       - kong-net
