@@ -65,10 +65,10 @@ local function add_error(errors, k, v)
   return errors
 end
 
-local function validate_headers(conf)
+local function validate_headers(plugin_conf)
 	local errors
 
-	for header_name,v in pairs(conf.headers) do
+	for header_name,v in pairs(plugin_conf.headers) do
 		local header_value = kong.request.get_header(header_name)
 		if header_value == nil then
 			errors = add_error(errors, header_name, "is not present") 
