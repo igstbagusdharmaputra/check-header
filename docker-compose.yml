@@ -37,9 +37,6 @@ services:
       - kong-database
 
   kong:
-    build:
-      context: .
-      dockerfile: "Dockerfile"
     image: kong-custom:latest
     restart: on-failure
     container_name: kong-custom
