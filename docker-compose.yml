@@ -1,31 +1,6 @@
 version: "3.7"
 
 services:
-  database:
-    image: postgres
-    restart: always
-    networks:
-      - kong-net
-    env_file:
-      - .env
-    ports:
-      - "15432:5432"
-    volumes:
-      - data:/var/lib/postgresql/data
-      - ./db/migrations/000001_create_items_table.up.sql:/docker-entrypoint-initdb.d/000001_create_items_table.up.sql
-
-  server:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    env_file: .env
-    depends_on:
-      - database
-    networks:
-      - kong-net
-    ports:
-    - "8080:8080"
-
   kong-database:
     image: postgres:9.6
     container_name: kong-postgres
@@ -64,7 +39,7 @@ services:
   kong:
     build:
       context: .
-      dockerfile: "Dockerfile.kong"
+      dockerfile: "Dockerfile"
     image: kong-custom:latest
     restart: on-failure
     container_name: kong-custom
@@ -115,7 +90,6 @@ services:
     ports:
       - "1337:1337"
 volumes:
-  data:
   kong_data:
 
 networks:
